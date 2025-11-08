@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adrian's Meeting Transcriber - Futuristic</title>
+    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for Inter --><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Configure Tailwind for Inter font and custom colors --><script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    },
+                    colors: {
+                        'bg-dark': '#0d1117',        // Deep Space Black
+                        'card-dark': '#161b22',      // Darker Grey for Cards
+                        'border-dark': '#30363d',    // Subtle Border
+                        'text-light': '#c9d1d9',     // Light Grey Text
+                        'text-muted': '#8b949e',     // Muted Grey Text
+                        'accent-blue': '#00aaff',    // Electric Blue
+                        'accent-green': '#00ffcc',   // Cyber Green
+                        'danger-red': '#ff6b6b',     // Warning Red
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Base styles */
+        body {
+            background-color: var(--tw-colors-bg-dark);
+            color: var(--tw-colors-text-light);
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* General Card Styling */
+        .container-card {
+            background-color: var(--tw-colors-card-dark);
+            border: 1px solid var(--tw-colors-border-dark);
+            box-shadow: 0 5px 15px rgba(0, 255, 204, 0.05), 0 0 0 1px rgba(0, 170, 255, 0.05); /* Subtle glow */
+        }
+
+        /* Input and Button base styles */
+        input[type="file"] {
+            background-color: var(--tw-colors-card-dark);
+            border: 1px solid var(--tw-colors-border-dark);
+            color: var(--tw-colors-text-light);
+        }
+        input[type="file"]::file-selector-button {
+            background-color: var(--tw-colors-accent-blue);
+            color: var(--tw-colors-bg-dark);
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        input[type="file"]::file-selector-button:hover {
+            background-color: #0088cc; /* Darker blue on hover */
+            transform: translateY(-1px);
+        }
+
+        /* Generic Button Styling */
+        .btn-primary {
+            background-image: linear-gradient(to right, var(--tw-colors-accent-blue), #00ccff);
+            color: var(--tw-colors-bg-dark);
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 10px rgba(0, 170, 255, 0.3);
+        }
+        .btn-primary:hover:not(:disabled) {
+            background-image: linear-gradient(to right, #00ccff, var(--tw-colors-accent-blue));
+            box-shadow: 0 6px 15px rgba(0, 170, 255, 0.5);
+            transform: translateY(-1px);
+        }
+        .btn-primary:disabled {
+            background-image: none;
+            background-color: var(--tw-colors-border-dark);
+            color: var(--tw-colors-text-muted);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Copy Button Specifics */
+        .copy-btn-accent {
+            background-color: var(--tw-colors-accent-green);
+            color: var(--tw-colors-bg-dark);
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 2px 5px rgba(0, 255, 204, 0.3);
+        }
+        .copy-btn-accent:hover:not(:disabled) {
+            background-color: #00e6b8; /* Slightly darker green */
+            transform: translateY(-0.5px);
+            box-shadow: 0 3px 8px rgba(0, 255, 204, 0.5);
+        }
+        .copy-btn-confirm {
+            background-color: var(--tw-colors-accent-blue); /* Use blue for confirmed copy */
+            box-shadow: 0 2px 5px rgba(0, 170, 255, 0.3);
+        }
+
+        /* Loading Indicator */
+        #loading-indicator {
+            border-top-color: var(--tw-colors-accent-blue);
+            -webkit-animation: spin 1s ease-in-out infinite;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Progress Bar */
+        #progress-bar {
+            background-image: linear-gradient(to right, var(--tw-colors-accent-blue), var(--tw-colors-accent-green));
+            box-shadow: 0 0 8px var(--tw-colors-accent-green); /* Glowing effect */
+        }
+
+        /* Message Box */
+        .message-success {
+            background-color: rgba(0, 255, 204, 0.1);
+            border-color: var(--tw-colors-accent-green);
+            color: var(--tw-colors-accent-green);
+        }
+        .message-error {
+            background-color: rgba(255, 107, 107, 0.1);
+            border-color: var(--tw-colors-danger-red);
+            color: var(--tw-colors-danger-red);
+        }
+        .message-info {
+            background-color: rgba(0, 170, 255, 0.1);
+            border-color: var(--tw-colors-accent-blue);
+            color: var(--tw-colors-accent-blue);
+        }
+
+        /* Scrollbar styling for pre/code blocks */
+        pre {
+            scrollbar-width: thin;
+            scrollbar-color: var(--tw-colors-accent-green) var(--tw-colors-card-dark);
+        }
+        pre::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        pre::-webkit-scrollbar-track {
+            background: var(--tw-colors-card-dark);
+            border-radius: 10px;
+        }
+        pre::-webkit-scrollbar-thumb {
+            background-color: var(--tw-colors-accent-green);
+            border-radius: 10px;
+            border: 2px solid var(--tw-colors-card-dark);
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 min-h-screen text-text-light">
+
+    <div class="w-full max-w-4xl mx-auto container-card rounded-xl p-6 sm:p-10">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-accent-green mb-2 pb-2 border-b border-border-dark leading-tight">
+            Adrian's <span class="text-accent-blue">AI</span> Transcriber
+        </h1>
+        <p class="text-text-muted mb-6 text-lg">
+            Upload M4A recordings for instant transcription and ChatGPT-ready summaries.
+        </p>
+
+        <!-- Step 1: File Upload --><section class="mb-8 p-4 rounded-lg bg-card-dark border border-border-dark">
+            <h2 class="text-xl font-semibold text-accent-blue mb-3 flex items-center">
+                <span class="inline-flex items-center justify-center w-8 h-8 mr-2 bg-accent-blue text-bg-dark rounded-full font-bold text-sm">1</span> Upload Audio File (M4A)
+            </h2>
+            <input
+                type="file"
+                id="audioFile"
+                accept="audio/mp4, audio/m4a"
+                class="w-full text-sm rounded-md px-4 py-3 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-accent-green file:text-bg-dark hover:file:bg-accent-green/80 file:transition-all file:duration-200"
+                onchange="handleFileUpload()"
+            />
+            
+            <!-- File Metadata Display --><div id="file-metadata-section" class="mt-4 p-4 rounded-lg bg-card-dark border border-border-dark hidden">
+                <h3 class="font-bold text-sm mb-2 text-accent-green">File Details:</h3>
+                <dl class="grid grid-cols-2 gap-y-1 text-sm text-text-light font-mono">
+                    <dt class="text-text-muted">Name:</dt><dd id="meta-name" class="truncate"></dd>
+                    <dt class="text-text-muted">Size:</dt><dd id="meta-size"></dd>
+                    <dt class="text-text-muted">Duration:</dt><dd id="meta-duration"></dd>
+                    <dt class="text-text-muted">Uploaded:</dt><dd id="meta-date"></dd>
+                </dl>
+                <p id="size-warning" class="text-xs text-danger-red mt-3 hidden animate-pulse">
+                    Warning: Very large files (100MB+) may cause timeouts or failures due to API limits or network. Consider shortening the audio.
+                </p>
+            </div>
+
+            <button
+                id="transcribeButton"
+                class="btn-primary w-full mt-6 px-6 py-3 rounded-lg flex items-center justify-center text-lg"
+                onclick="handleTranscription()"
+                disabled
+            >
+                <span id="button-text">Transcribe Audio</span>
+                <div id="loading-indicator" class="w-6 h-6 border-2 border-solid rounded-full animate-spin ml-3 hidden"></div>
+            </button>
+        </section>
+
+        <!-- Status & Progress Bar --><section id="status-bar-section" class="mb-8 p-4 rounded-lg bg-card-dark border border-border-dark hidden">
+            <h2 class="text-xl font-semibold text-accent-blue mb-3 flex items-center">
+                <span class="inline-flex items-center justify-center w-8 h-8 mr-2 bg-accent-blue text-bg-dark rounded-full font-bold text-sm">2</span> Transcription Status
+            </h2>
+            <div class="bg-border-dark rounded-full h-4 mb-3">
+                <div id="progress-bar" class="h-4 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+            </div>
+            <p id="status-message" class="text-sm text-text-light font-medium text-center"></p>
+        </section>
+
+        <!-- Step 3: Full Transcription Output --><section id="transcription-output-section" class="mb-8 hidden p-4 rounded-lg bg-card-dark border border-border-dark">
+            <h2 class="text-xl font-semibold text-accent-blue mb-3 flex items-center">
+                <span class="inline-flex items-center justify-center w-8 h-8 mr-2 bg-accent-blue text-bg-dark rounded-full font-bold text-sm">3</span> Full Transcription
+            </h2>
+            <div class="relative bg-bg-dark p-4 rounded-lg border border-border-dark max-h-60 overflow-y-auto">
+                <pre id="transcription-text" class="whitespace-pre-wrap text-sm text-text-light font-mono leading-relaxed"></pre>
+                <button
+                    class="copy-btn-accent absolute top-3 right-3 px-3 py-1 text-sm font-medium rounded-md"
+                    onclick="copyTextToClipboard('transcription-text', this)"
+                >
+                    Copy
+                </button>
+            </div>
+        </section>
+
+        <!-- Step 4: Ready-to-use ChatGPT Prompt --><section id="chatgpt-prompt-section" class="hidden p-4 rounded-lg bg-card-dark border border-border-dark">
+            <h2 class="text-xl font-semibold text-accent-blue mb-3 flex items-center">
+                <span class="inline-flex items-center justify-center w-8 h-8 mr-2 bg-accent-blue text-bg-dark rounded-full font-bold text-sm">4</span> ChatGPT Prompt (Ready to Paste)
+            </h2>
+            <p class="text-sm text-text-muted mb-4">
+                This structured prompt includes the full transcription, ready for powerful summarization and action item extraction by ChatGPT.
+            </p>
+            <div class="relative bg-bg-dark p-4 rounded-lg border border-border-dark max-h-60 overflow-y-auto">
+                <pre id="chatgpt-prompt-text" class="whitespace-pre-wrap text-sm text-accent-green font-mono leading-relaxed"></pre>
+                <button
+                    class="copy-btn-accent absolute top-3 right-3 px-3 py-1 text-sm font-medium rounded-md"
+                    onclick="copyTextToClipboard('chatgpt-prompt-text', this)"
+                >
+                    Copy Prompt
+                </button>
+            </div>
+        </section>
+
+        <!-- Error/Message Box --><div id="message-box" class="mt-8 p-4 rounded-lg text-sm text-center hidden" role="alert"></div>
+
+    </div>
+
+    <script>
+        // Global variables provided by the Canvas environment
+        // !!! API Key Fix: If you are running this file locally, you MUST insert your Gemini API Key here inside the quotes
+        // e.g., const apiKey = "AIzaSy...your-key-here";
+        const apiKey = "AIzaSyB9XNrJ3T3ygN6j_5F0mNs7HllfgntgYIs"; 
+        const modelName = 'gemini-2.5-flash-preview-09-2025'; // Ensure this model name is up-to-date and supports audio
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+        // Element references
+        const fileInput = document.getElementById('audioFile');
+        const transcribeButton = document.getElementById('transcribeButton');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const buttonText = document.getElementById('button-text');
+        const transcriptionTextElement = document.getElementById('transcription-text');
+        const chatGPTPromptElement = document.getElementById('chatgpt-prompt-text');
+        const messageBox = document.getElementById('message-box');
+        const transcriptionSection = document.getElementById('transcription-output-section');
+        const promptSection = document.getElementById('chatgpt-prompt-section');
+        const metadataSection = document.getElementById('file-metadata-section');
+        const statusBarSection = document.getElementById('status-bar-section');
+        const progressBar = document.getElementById('progress-bar');
+        const statusMessage = document.getElementById('status-message');
+        const sizeWarning = document.getElementById('size-warning');
+        
+        // Metadata elements
+        const metaName = document.getElementById('meta-name');
+        const metaSize = document.getElementById('meta-size');
+        const metaDuration = document.getElementById('meta-duration');
+        const metaDate = document.getElementById('meta-date');
+
+        // Valid MIME types for M4A/MP4 audio
+        const VALID_MIME_TYPES = ['audio/mp4', 'audio/m4a'];
+
+
+        /**
+         * Utility to display temporary messages (errors or success) in the UI.
+         */
+        function showMessage(message, type = 'info') {
+            messageBox.textContent = message;
+            messageBox.className = 'mt-8 p-4 rounded-lg text-sm text-center transition-all duration-300 ease-in-out';
+
+            switch (type) {
+                case 'success':
+                    messageBox.classList.add('message-success');
+                    break;
+                case 'error':
+                    messageBox.classList.add('message-error');
+                    break;
+                case 'info':
+                default:
+                    messageBox.classList.add('message-info');
+                    break;
+            }
+            messageBox.classList.remove('hidden');
+            // Hide after 5 seconds
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 5000);
+        }
+
+        /**
+         * Formats file size in bytes into human-readable format (MB, GB).
+         */
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        /**
+         * Gets audio duration using the Audio API.
+         */
+        async function getAudioDuration(file) {
+            return new Promise((resolve) => {
+                const audio = new Audio(URL.createObjectURL(file));
+                audio.onloadedmetadata = () => {
+                    resolve(audio.duration); // Duration in seconds
+                    URL.revokeObjectURL(audio.src);
+                };
+                audio.onerror = () => {
+                    console.warn('Could not determine audio duration from metadata. File might be corrupted or codec unsupported by browser.');
+                    resolve(0); 
+                    URL.revokeObjectURL(audio.src);
+                };
+            });
+        }
+        
+        /**
+         * Updates the UI with file metadata after file selection.
+         */
+        async function handleFileUpload() {
+            const file = fileInput.files[0];
+            
+            // Reset state
+            metadataSection.classList.add('hidden');
+            transcribeButton.disabled = true;
+            transcriptionSection.classList.add('hidden');
+            promptSection.classList.add('hidden');
+            statusBarSection.classList.add('hidden');
+            sizeWarning.classList.add('hidden');
+            
+            // Reset button text to default if a file was previously selected
+            buttonText.textContent = 'Transcribe Audio';
+
+            if (!file) return;
+
+            // Display basic metadata
+            metaName.textContent = file.name;
+            metaSize.textContent = formatBytes(file.size);
+            metaDate.textContent = new Date(file.lastModified).toLocaleDateString();
+
+            // Check for large file warning
+            if (file.size > 100 * 1024 * 1024) { // > 100 MB
+                sizeWarning.classList.remove('hidden');
+            } else if (file.size > 10 * 1024 * 1024) { // > 10 MB but < 100MB
+                 sizeWarning.textContent = "Heads up: This file is large and may take a while to process.";
+                 sizeWarning.classList.remove('hidden');
+            }
+
+
+            // Get duration
+            const durationSeconds = await getAudioDuration(file);
+            const durationMinutes = Math.floor(durationSeconds / 60);
+            const durationRemainingSeconds = Math.round(durationSeconds % 60);
+            metaDuration.textContent = durationSeconds > 0 
+                ? `${durationMinutes} min, ${durationRemainingSeconds} sec`
+                : 'N/A (could not read duration)';
+
+            metadataSection.classList.remove('hidden');
+            transcribeButton.disabled = false;
+        }
+
+
+        /**
+         * Converts a File object to a Base64 string, providing progress updates.
+         */
+        function fileToBase64(file, progressCallback) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+
+                reader.onloadstart = () => progressCallback(0, 'Starting file read...');
+                
+                // Track progress of the FileReader read operation, mapping to 0-50%
+                reader.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const percentage = Math.round((e.loaded / e.total) * 50); 
+                        progressCallback(percentage, 'Local conversion to Base64...');
+                    }
+                };
+
+                reader.onload = () => {
+                    progressCallback(50, 'Base64 conversion complete. Preparing for API call.');
+                    const base64String = reader.result.split(',')[1];
+                    resolve(base64String);
+                };
+                reader.onerror = (error) => {
+                    console.error('FileReader encountered an error:', reader.error || error);
+                    reject(new Error('Local file reading failed, possibly due to file corruption or size.'));
+                }
+
+                reader.readAsDataURL(file);
+            });
+        }
+
+        /**
+         * Generic fetch utility with exponential backoff for retries.
+         */
+        async function fetchWithRetry(url, options, maxRetries = 3) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.status === 429 && i < maxRetries - 1) {
+                        const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                        console.log(`Rate limit hit, retrying in ${delay / 1000}s...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue; 
+                    }
+                    if (!response.ok) {
+                        const errorBody = await response.text();
+                        throw new Error(`API error: ${response.status} ${response.statusText} - ${errorBody}`);
+                    }
+                    return response;
+                } catch (error) {
+                    if (i === maxRetries - 1) {
+                        throw error;
+                    }
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                    console.error(`Fetch failed, retrying in ${delay / 1000}s:`, error.message);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+
+        /**
+         * Callback function to update the progress bar UI.
+         */
+        function updateProgress(percentage, message) {
+            progressBar.style.width = `${percentage}%`;
+            statusMessage.textContent = message;
+        }
+
+        /**
+         * Core function to handle file upload and API transcription.
+         */
+        async function handleTranscription() {
+            const file = fileInput.files[0];
+            if (!file) {
+                showMessage('Please select an M4A audio file first.', 'error');
+                return;
+            }
+            
+            if (!VALID_MIME_TYPES.includes(file.type) && !file.name.toLowerCase().endsWith('.m4a')) {
+                showMessage(`Invalid file type: ${file.type}. Please upload an M4A or MP4 audio file.`, 'error');
+                console.error(`Validation failed: Invalid MIME type detected: ${file.type}`);
+                return;
+            }
+
+            // --- UI State: Loading ---
+            transcribeButton.disabled = true;
+            loadingIndicator.classList.remove('hidden');
+            buttonText.textContent = 'Processing...';
+            transcriptionSection.classList.add('hidden');
+            promptSection.classList.add('hidden');
+            statusBarSection.classList.remove('hidden');
+            updateProgress(0, 'Initializing transcription...');
+
+            let base64Data;
+            try {
+                // 1. Convert file to Base64 with progress updates (0-50%)
+                console.log('Step 1: Starting Base64 conversion.');
+                base64Data = await fileToBase64(file, updateProgress);
+                console.log('Step 1: Base64 conversion complete.');
+
+                // 2. Construct API Payload
+                updateProgress(55, 'Sending data to Gemini API (uploading & processing)...');
+                const userPrompt = "Transcribe this entire audio file accurately and completely. Do not add any introductory or concluding remarks; provide only the raw transcribed text.";
+
+                const payload = {
+                    contents: [
+                        {
+                            role: "user",
+                            parts: [
+                                { text: userPrompt },
+                                {
+                                    inlineData: {
+                                        mimeType: "audio/mp4", 
+                                        data: base64Data
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                };
+                
+                // 3. Call the Gemini API (Progress will jump from 55% to 100% upon success)
+                console.log('Step 2: Sending request to Gemini API.');
+                updateProgress(75, 'Awaiting Transcription Result from Gemini (could take minutes for large files)...');
+                const response = await fetchWithRetry(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                console.log('Step 2: Received response from Gemini API.');
+
+                const result = await response.json();
+                const transcription = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!transcription) {
+                    const safetyRatings = result.candidates?.[0]?.safetyRatings;
+                    console.error("API response structure error:", result);
+                    if (safetyRatings && safetyRatings.length > 0) {
+                        throw new Error(`Transcription blocked due to safety settings or model refusal. Ratings: ${JSON.stringify(safetyRatings)}`);
+                    }
+                    throw new Error("Could not extract transcription text from the API response. Check console for full API response.");
+                }
+
+                updateProgress(100, 'Transcription Complete!');
+
+                // 4. Update UI with Transcription
+                transcriptionTextElement.textContent = transcription;
+                transcriptionSection.classList.remove('hidden');
+
+                // 5. Generate ChatGPT Prompt
+                const chatGPTPrompt = `Below is a transcription of a voice recording. Analyze the full text, summarize the key discussion points, and most importantly, extract and list all specific action items or tasks mentioned, especially those assigned to 'Adrian'.
+
+TRANSCRIPTION START
+---
+${transcription}
+---
+TRANSCRIPTION END`;
+
+                chatGPTPromptElement.textContent = chatGPTPrompt;
+                promptSection.classList.remove('hidden');
+
+                showMessage('Transcription successful! Now copy the prompt below and paste it into ChatGPT.', 'success');
+
+            } catch (error) {
+                console.error('Transcription failed:', error);
+                updateProgress(0, 'Error: Failed. See message above.');
+                statusBarSection.classList.add('hidden');
+                
+                if (error.message.includes("401 Unauthorized")) {
+                     showMessage(`Error: 401 Unauthorized. Ensure your Gemini API key is correct.`, 'error');
+                } else if (error.message.includes("400 Bad Request")) {
+                    showMessage(`Error: 400 Bad Request. This often means the audio format is not supported or the file is too large for the model to process.`, 'error');
+                } else {
+                    showMessage(`Error: ${error.message || 'An unknown error occurred during transcription.'}. Please check the console for details.`, 'error');
+                }
+            } finally {
+                // --- UI State: Ready ---
+                transcribeButton.disabled = false;
+                loadingIndicator.classList.add('hidden');
+                buttonText.textContent = 'Transcribe Audio';
+            }
+        }
+
+        /**
+         * Copies text from a given element ID to the clipboard.
+         */
+        function copyTextToClipboard(elementId, buttonElement) {
+            const textToCopy = document.getElementById(elementId).textContent;
+
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            textarea.style.position = 'fixed'; 
+            textarea.style.left = '-9999px'; // Move off-screen
+            document.body.appendChild(textarea);
+            textarea.select();
+
+            try {
+                document.execCommand('copy');
+                buttonElement.textContent = 'Copied!';
+                buttonElement.classList.remove('copy-btn-accent');
+                buttonElement.classList.add('copy-btn-confirm');
+                
+                setTimeout(() => {
+                    buttonElement.textContent = (elementId === 'transcription-text' ? 'Copy' : 'Copy Prompt');
+                    buttonElement.classList.remove('copy-btn-confirm');
+                    buttonElement.classList.add('copy-btn-accent');
+                }, 1500);
+            } catch (err) {
+                console.error('Copy failed: ', err);
+                showMessage('Failed to copy text. Please try selecting and copying manually.', 'error');
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+    </script>
+</body>
+</html>
